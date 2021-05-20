@@ -41,9 +41,10 @@ while (!convergence) {
 }
 
 # plotting the results
-plot(seq(length(loss.hist)), loss.hist)
+plot(seq(length(loss.hist)), loss.hist, 
+     type = "l", lwd = 3, col="dark red", main = "Loss during Gradient Descent", xlab = "steps", ylab = "MSE")
 
-
+# metrics on train and test
 train.loss = loss.hist[length(loss.hist)]
 test.loss = MSE(y_pred = mat.mult(X_te, matrix(beta)), y_true = y_te)
 train.acc = Accuracy(y_pred = mat.mult(X_tr, matrix(beta))>.5, y_true = y_tr)
