@@ -33,11 +33,11 @@ accuracy.Bayes = sum(h.opt(xs) == ys)/length(ys)
 
 # Other classifier
 val.indices = sample(seq(1, n), 50, replace=F)
-x.tr = xs[-val.indices]
-x.val = xs[val.indices]
-y.tr = ys[-val.indices]
-y.val = ys[val.indices]
+train= data.frame(X = xs[-val.indices], y =  ys[-val.indices])
+val= data.frame(X = xs[val.indices], y =  ys[val.indices])
 
-model = glm(y.tr ~ x.tr, family = "binomial")
-probabilities <- predict(model, newdata=list(x.val), type='response')
-predicted.classes <- ifelse(probabilities > 0.5, T, F)
+
+model = glm(y ~ X, data = train, family = "binomial")
+probabilities <- predict(model, newdata=val, type='response')
+predicted.classes <- ifelse(probabilities > 0.5, 1, 0)
+accuracy.Log = sum(predicted.classes == val$y)/length(val$y)
