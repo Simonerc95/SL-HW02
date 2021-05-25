@@ -8,14 +8,25 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(require("viridis", quietly = T))
+set.seed(2020)
 ```
 
 ## Exercise 1: The Bayes Classifier
 
+### 1. Bayes strategy
+
+### 2. Bayes Classification Rule $h_{opt}(x)$
+
 Given $(X,Y)$ r.v. with $Y \in \{0,1\}$ and $X \in \mathbb{R}$, having conditional distribution:
 $$
-(X ~|~Y = 0) \sim Unif(-3, 1)
+(X ~|~Y = 0) \sim Unif(-3, 1)~~~ and~~~ (X ~|~Y = 1) \sim Unif(-1, 3) 
 $$
+and supposing $\mathbb{P}(Y=0)=\mathbb{P}(Y=1)= \frac{1}{2}$ we have that the Bayes classification rule $h_{opt}(x)$ is given by:
+
+$$
+
+$$
+
 #### Non linear approximation 
 
 After defining the R functions to get the Doppler function and the cosine basis at a given index j, we obtain each Fourier coefficient at the index $j$ through the inner product $\langle m, \phi_j \rangle$, where $m$ is the function to approximate (the Doppler function) and $\phi_j$ is the j-th function composing the orthonormal basis of the functions space, wich can be computed through the following integral:
