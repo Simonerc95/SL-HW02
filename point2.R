@@ -1,6 +1,5 @@
 load("data/amazon_review_clean.RData")
 library("MLmetrics")
-library("Rfast")
 
 set.seed(1234)
 
@@ -17,8 +16,6 @@ y_tr = y_tr[-val.indices]
 gradient = function(n, X, X.y, X.t.beta){
     1/n * (t(X) %*% (1/(1+exp(-X.t.beta))) - X.y)
 }
-
-# X.square = mat.mult(t(X_tr), X_tr)
 
 X.y = t(X_tr)%*%y_tr
 

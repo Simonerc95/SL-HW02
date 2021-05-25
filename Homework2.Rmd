@@ -98,44 +98,39 @@ for (idx in 1:length(j.seq)){
 }
 ```
 
-### BONUS
+## Exercise 2: Go Gradient, Go!
 
-We then compared these results with the ones obtained with the linear 
-approximation to see which of the two algorithms had better performance.
-So we had to get also the linear approximation of the Doppler function, that is
-just $$m(x) \approx \sum_{j=0}^J \beta_j \cdot \phi_j(x)$$. This approximation gave
-the following results.
+```{r getting the data, echo=FALSE, include=FALSE}
+load("data/amazon_review_clean.RData")
 
-```{r}
-proj.cos <- function(x, f.coeff, j.max = 10){
-  out = rep(0, length(x))
-  for(idx in 0:j.max){
-    if ( !is.na(f.coeff[idx + 1]) ) out = out + f.coeff[idx + 1] * cos.basis(x, j = idx)
-  }
-  return(out)
-}
-# Visualize some n-terms approximations
-j.seq = c(5, 10, 25, 50, 100, 150)
-mycol = viridis(length(j.seq), alpha = .7)
-par(mfrow = c(2,3))
-for (idx in 1:length(j.seq)){
-  # Original function
-  curve(doppler.fun(x), from = 0, to = 1,
-        main = paste(j.seq[idx], "-term approximation", sep = ""),
-        xlab = "", ylab = expression(m[J](x)),
-        n = 1001, col = gray(.8), lwd = 3)
-  # Add approximation
-  curve(proj.cos(x, f.coeff = f.coeff, j.seq[idx]),
-        n = 1001, col = mycol[idx], lwd = 4,
-        add = TRUE)
-}
+# changing labels of y vectors to book = TRUE, movie = FALSE
+y_tr = (y_tr == "book")
+y_te = (y_te == "book")
+val.indices = sample(seq(1, length(y_tr)), 50000, replace = F)
+X_val = X_tr[val.indices, ]
+y_val = y_tr[val.indices]
+X_tr = X_tr[-val.indices, ]
+y_tr = y_tr[-val.indices]
+
 ```
 
-Already at a first glance we can see that the approximations obtained through the 
-greedy approximation are in general better than the one coming from the linear one.
-But in order to have a numerical comparison, we defined the two functions that compute
-the L2-reconstrucion error at any given value of $J$ (number of components) for both
-the linear and the non-linear approximation. The error is defined as:
+Right after loading the dataset we encode the responses: 
+
+```{r encoding the responses}
+y_tr = (y_tr == "book")
+y_te = (y_te == "book")
+```
+
+Defini
+```{r the gradient function}
+# differentiation variables:
+gradient = function(n, X, X.y, X.t.beta){
+    1/n * (t(X) %*% (1/(1+exp(-X.t.beta))) - X.y)
+}
+
+X.y = t(X_tr)%*%y_tr
+```
+
 
 $$
 dist_{L_2} (m,m_J ) = \| m − m_J \|^2 = \sqrt{\int \left( m(x) − m_J (x) \right)^2 dx}
