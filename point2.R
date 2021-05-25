@@ -71,10 +71,12 @@ while (it < 500) {
     lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
     }
 }
+
 # plotting the results
 plot(seq(length(loss.hist)), loss.hist, 
      type = "l", ylim = c(0,2), lwd = 3, col="dark red", main = "Loss during Gradient Descent",
      xlab = "epochs", ylab = "Cross-Entropy loss")
+
 # metrics on train and test
 train.loss = loss.hist[length(loss.hist)]
 test.loss = 1/n * sum(log(1+exp(X_te %*% beta)) - y_te*X_te %*% beta)

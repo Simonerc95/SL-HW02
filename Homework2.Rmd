@@ -1,0 +1,173 @@
+---
+title: "Homework 2"
+author: "Ruggeri D., Ercolino S., Tazza G."
+date: "25/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(require("viridis", quietly = T))
+```
+
+## Exercise 1: The Bayes Classifier
+
+Given $(X,Y)$ r.v. with $Y \in \{0,1\}$ and $X \in \mathbb{R}$, having conditional distribution:
+$$
+(X ~|~Y = 0) \sim Unif(-3, 1)
+$$
+#### Non linear approximation 
+
+After defining the R functions to get the Doppler function and the cosine basis at a given index j, we obtain each Fourier coefficient at the index $j$ through the inner product $\langle m, \phi_j \rangle$, where $m$ is the function to approximate (the Doppler function) and $\phi_j$ is the j-th function composing the orthonormal basis of the functions space, wich can be computed through the following integral:
+
+$$
+\beta_j = \langle m, \phi_j \rangle =
+\int_a^b m(x)\phi_j(x) dx
+$$
+
+The integral is limited on the domain of the feature space, so in our case it is $a=0$ and $b=1$.
+
+```{r}
+cos.basis = function(x, j = 4) 1*(j == 0) + sqrt(2)*cos(pi*j*x)*(j > 0)
+doppler.fun <- function(x) sqrt(x*(1 - x))*sin( (2.1*pi)/(x + 0.05) )
+
+#changed j.max to 300, so that the 150 greatest coefficients 
+#may be taken also over 200 (although it doesn't change much) 
+
+j.max <- 300
+f.coeff <- rep(NA, j.max+1)
+for (idx in 0:j.max){
+  foo = tryCatch(
+    integrate(function(x, j) doppler.fun(x) * cos.basis(x,j), 
+              lower = 0, upper = 1, j = idx)$value,
+    error = function(e) NA
+  )
+  f.coeff[idx + 1] = foo
+}
+```
+
+The greedy approximation is given by taking from the combination of the infinite components of the orthonormal basis $m(x) = \sum_{j=0}^\infty \beta_j \cdot \phi_j(x)$ only the first $J$ components with the largest Fourier coefficients, that can be seen the functions composing the orthonormal basis with the highest correlation with the Doppler Function. The formula describing this approximation is 
+
+$$
+m(x) \approx \sum_{j \in J^*} \beta_j \cdot \phi_j(x)
+$$
+where $J^*$ is the set of indices of the J largest Fourier coefficients $\beta_j$.
+Since we are iinterested in the values of the $\beta_j$'s for the implementation of the greedy algorithm, it is worth looking at the plot of the first 300 coefficients to grasp which ones will be possibly chosen.
+
+```{r}
+plot(f.coeff, type = "h", ylab = expression(beta[j]), main = "", xlab = "")
+```
+
+
+So the largest Fourier coefficients are, as one could expect, in the leftmost part of the plot, although not all of the largest are located sequentially at the first indices, so we can expect a different result from the one obtained with the linear approximation. 
+
+We then write a simple function to extract the indices of the largest Fourier coefficients, by first selecting the threshold absolute value for a given number of coefficients wanted $J$ (that is just the $J$-th term of the sorted vector of the absolute values of the Fourier coefficients), and then looking at the Fourier coefficients that are over that threshold in the original sequence of Fourier coefficients.
+
+```{r}
+sorted <- sort(abs(f.coeff), decreasing = TRUE)
+extract_topJ <- function(J) which(abs(f.coeff) >= sorted[J])
+# showing that (some of) the largest 150 coefficients have indices exceeding 200
+tail(extract_topJ(150))
+```
+
+We can now obtain the function to approximate the doppler function with the $J$
+largest orthonoormal components, and we plot the approximations obtained
+at 6 values of $J$ as follows.
+```{r}
+proj.cos.nl <- function(x, f.coeff, j.max = 10){
+  out = rep(0, length(x))
+  for(idx in extract_topJ(j.max)){
+    if ( !is.na(f.coeff[idx]) ) out = out + f.coeff[idx] * cos.basis(x, j = idx-1)
+  }
+  return(out)
+}
+# Visualize some n-terms approximations
+j.seq = c(5, 10, 25, 50, 100, 150)
+mycol = viridis(length(j.seq), alpha = .7)
+par(mfrow = c(2,3))
+for (idx in 1:length(j.seq)){
+  # Original function
+  curve(doppler.fun(x), from = 0, to = 1,
+        main = paste(j.seq[idx], "-term approximation", sep = ""),
+        xlab = "", ylab = expression(m[J](x)),
+        n = 1001, col = gray(.8), lwd = 3)
+  # Add approximation
+  curve(proj.cos.nl(x, f.coeff = f.coeff, j.seq[idx]),
+        n = 1001, col = mycol[idx], lwd = 4,
+        add = TRUE)
+}
+```
+
+### BONUS
+
+We then compared these results with the ones obtained with the linear 
+approximation to see which of the two algorithms had better performance.
+So we had to get also the linear approximation of the Doppler function, that is
+just $$m(x) \approx \sum_{j=0}^J \beta_j \cdot \phi_j(x)$$. This approximation gave
+the following results.
+
+```{r}
+proj.cos <- function(x, f.coeff, j.max = 10){
+  out = rep(0, length(x))
+  for(idx in 0:j.max){
+    if ( !is.na(f.coeff[idx + 1]) ) out = out + f.coeff[idx + 1] * cos.basis(x, j = idx)
+  }
+  return(out)
+}
+# Visualize some n-terms approximations
+j.seq = c(5, 10, 25, 50, 100, 150)
+mycol = viridis(length(j.seq), alpha = .7)
+par(mfrow = c(2,3))
+for (idx in 1:length(j.seq)){
+  # Original function
+  curve(doppler.fun(x), from = 0, to = 1,
+        main = paste(j.seq[idx], "-term approximation", sep = ""),
+        xlab = "", ylab = expression(m[J](x)),
+        n = 1001, col = gray(.8), lwd = 3)
+  # Add approximation
+  curve(proj.cos(x, f.coeff = f.coeff, j.seq[idx]),
+        n = 1001, col = mycol[idx], lwd = 4,
+        add = TRUE)
+}
+```
+
+Already at a first glance we can see that the approximations obtained through the 
+greedy approximation are in general better than the one coming from the linear one.
+But in order to have a numerical comparison, we defined the two functions that compute
+the L2-reconstrucion error at any given value of $J$ (number of components) for both
+the linear and the non-linear approximation. The error is defined as:
+
+$$
+dist_{L_2} (m,m_J ) = \| m − m_J \|^2 = \sqrt{\int \left( m(x) − m_J (x) \right)^2 dx}
+$$
+
+```{r}
+compute_err_lin <- function(j){
+  if(j<=300){
+  diff <- function(x) (doppler.fun(x) - proj.cos(x, f.coeff = f.coeff, j.max = j))^2
+  return(integrate(diff, lower = 0, upper = 1)$value)
+  }
+  else print("chosen value of j too high, should be below 200")
+}
+compute_err_nl <- function(j){
+  if(j<=300){
+  diff <- function(x) (doppler.fun(x) - proj.cos.nl(x, f.coeff = f.coeff, j.max = j))^2
+  return(integrate(diff, lower = 0, upper = 1)$value)
+  }
+  else print("chosen value of j too high, should be below 200")
+}
+compute_err_lin <- Vectorize(compute_err_lin)
+compute_err_nl <- Vectorize(compute_err_nl)
+```
+
+Having these two functions, the fastest way to compare the two algorithms is to plot the 
+values of both the approximation errors at any value of $J$, to see which approximation
+works best at each choice of number of components.
+
+```{r}
+curve(compute_err_lin, 1,200, xlab = "J", ylab = expression(paste('L'[2],'-error')), col="blue",lwd = 2)
+title(main ="Approximation errors of the \nlinear and greedy approximations as functions of J", cex.main=1)
+curve(compute_err_nl, 1,200, add = TRUE, col="red", lwd = 2)
+legend("top",inset=.02, legend=c("Linear", "Greedy"),
+       col=c("blue", "red"), lty = 1, lwd=2, cex= 0.8)
+```

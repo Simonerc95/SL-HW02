@@ -17,10 +17,11 @@ gen <- function(y){if(y==0){runif(1, -3, 1)}
 gen <- Vectorize(gen)
 xs <- gen(ys)
 xs_test <- gen(ys_test)
+par(mfrow=c(1,1))
 plot.new()
 hist(xs, freq = F, col = 'light blue', main = 'Marginal distribution of the variable X')
 curve(p(x,0) + p(x, 1),col = 'orange', add = T, lwd = 3)
-legend(1.2, 0.3, legend = c('Simulated EPDF', 'Theoretical PDF'), col = c('light blue', 'orange'), 
+legend(1.2, 0.3, legend = c('Simulated Histogram', 'Theoretical PDF'), col = c('light blue', 'orange'), 
        lty = 1, lwd = 4, cex=0.8)
 
 # Regression function
@@ -32,7 +33,7 @@ h.opt <- function(x) {if(reg.fun(x) > 0.5) {1}
                      else 0}
 h.opt <- Vectorize(h.opt)
 accuracy.Bayes = sum(h.opt(xs_test) == ys_test)/length(ys_test)
-
+    
 
 # Other Classifier --------------------------------------------------------
 
