@@ -112,28 +112,29 @@ for (idx in 1:length(j.seq)){
 
 ## Exercise 2: Go Gradient, Go!
 
-```{r getting the data, echo=FALSE, include=FALSE}
+Loading the dataset and encoding the responses right after: 
+
+```{r getting the data and encoding the responses}
 load("data/amazon_review_clean.RData")
 
 # changing labels of y vectors to book = TRUE, movie = FALSE
 y_tr = (y_tr == "book")
 y_te = (y_te == "book")
+
+```
+
+Creating the validation dataset from train:
+
+```{r val dataset}
 val.indices = sample(seq(1, length(y_tr)), 50000, replace = F)
 X_val = X_tr[val.indices, ]
 y_val = y_tr[val.indices]
 X_tr = X_tr[-val.indices, ]
 y_tr = y_tr[-val.indices]
-
 ```
 
-Right after loading the dataset we encode the responses: 
-
-```{r encoding the responses}
-y_tr = (y_tr == "book")
-y_te = (y_te == "book")
-```
-
-Defining the gradient computation and computing the X.y matrix in advance:
+#### Gradient
+Defining the gradient computation and computing the $X.y$ matrix in advance:
 
 ```{r the gradient function}
 # differentiation variables:
@@ -144,6 +145,7 @@ gradient = function(n, X, X.y, X.t.beta){
 X.y = t(X_tr)%*%y_tr
 ```
 
+#### Parameters
 Now is time to initialize the parameters and hyper parameters:
 
 ```{r parameters}
@@ -152,8 +154,8 @@ beta = rnorm(ncol(X_tr), sd=0.1)
 
 # hyper parameters:
 alpha = 0.1 # learning rate
-tolerance = 0.0001 # tolerance for the convergence condition
-epochs = 10
+tolerance = 0.00001 # tolerance for the convergence condition
+epochs = 500 # early stop on iterations
 
 n = nrow(X_tr)
 ```
@@ -173,7 +175,7 @@ loss.hist = c(loss)
 par(mfrow=c(1,2))
 ```
 
-Starting the raining with the Gradient Descent
+#### Starting the raining with the Gradient Descent
 
 ```{r training}
 it = 1
@@ -197,12 +199,13 @@ while (continue) {
   val.accs <- cbind(val.accs, c(val.acc))
   
   # conditions for stop iterating
-  if ((old.val.loss <= val.loss + tolerance) || (it>epochs)){continue = F}
+  if (((it>50) && (old.val.loss <= val.loss + tolerance)) || (it>epochs)){continue = F}
   it = it + 1
 }
 
 ```
 
+### Plots
 Here the descending curves:
 
 ```{r plot, echo=FALSE}
@@ -216,9 +219,11 @@ plot(seq(length(loss.hist)), train.accs, type = "l",
 lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
 ```
 
+
+### Final results
 And here the final results on test and train:
 
-```{r results}
+```{r results, include=FALSE}
 # metrics on train and test
 train.loss = loss.hist[length(loss.hist)]
 test.loss = 1/n * sum(log(1+exp(X_te %*% beta)) - y_te*X_te %*% beta)
@@ -228,4 +233,6 @@ test.acc = Accuracy(y_pred = X_te %*% beta>0, y_true = y_te)
 print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss), 
             paste("Train acc:", train.acc, "Test acc:", test.acc), sep = "\n"))
 ```
-
+Train loss: `r train.loss` Test loss: `r test.loss` \
+Train accuracy: `r train.acc` Test accuracy: `r test.acc` \
+Number of iterations: `r it`
