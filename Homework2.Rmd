@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(require("viridis", quietly = T))
+suppressMessages(require("MLmetrics", quietly = T))
 set.seed(2020)
 ```
 
@@ -132,7 +133,8 @@ y_tr = (y_tr == "book")
 y_te = (y_te == "book")
 ```
 
-Defini
+Defining the gradient computation and computing the X.y matrix in advance:
+
 ```{r the gradient function}
 # differentiation variables:
 gradient = function(n, X, X.y, X.t.beta){
@@ -142,38 +144,88 @@ gradient = function(n, X, X.y, X.t.beta){
 X.y = t(X_tr)%*%y_tr
 ```
 
+Now is time to initialize the parameters and hyper parameters:
 
-$$
-dist_{L_2} (m,m_J ) = \| m − m_J \|^2 = \sqrt{\int \left( m(x) − m_J (x) \right)^2 dx}
-$$
+```{r parameters}
+# regression parameters
+beta = rnorm(ncol(X_tr), sd=0.1)
 
-```{r}
-compute_err_lin <- function(j){
-  if(j<=300){
-  diff <- function(x) (doppler.fun(x) - proj.cos(x, f.coeff = f.coeff, j.max = j))^2
-  return(integrate(diff, lower = 0, upper = 1)$value)
-  }
-  else print("chosen value of j too high, should be below 200")
-}
-compute_err_nl <- function(j){
-  if(j<=300){
-  diff <- function(x) (doppler.fun(x) - proj.cos.nl(x, f.coeff = f.coeff, j.max = j))^2
-  return(integrate(diff, lower = 0, upper = 1)$value)
-  }
-  else print("chosen value of j too high, should be below 200")
-}
-compute_err_lin <- Vectorize(compute_err_lin)
-compute_err_nl <- Vectorize(compute_err_nl)
+# hyper parameters:
+alpha = 0.1 # learning rate
+tolerance = 0.0001 # tolerance for the convergence condition
+epochs = 10
+
+n = nrow(X_tr)
 ```
 
-Having these two functions, the fastest way to compare the two algorithms is to plot the 
-values of both the approximation errors at any value of $J$, to see which approximation
-works best at each choice of number of components.
+```{r first step, echo=FALSE, include=FALSE}
+X.t.beta = X_tr %*% beta
+X.v.beta = X_val %*% beta
+loss = 1/n * sum(log(1+exp(X.t.beta)) - y_tr*X.t.beta)
+val.loss <- 1/n * sum(log(1+exp(X.v.beta)) - y_val*X.v.beta)
+train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+val.acc = Accuracy(y_pred = X.v.beta>0, y_true = y_val)
+train.accs = c(train.acc)
+val.accs = c(val.acc)
+val.hist <- c(val.loss)
+loss.hist = c(loss)
 
-```{r}
-curve(compute_err_lin, 1,200, xlab = "J", ylab = expression(paste('L'[2],'-error')), col="blue",lwd = 2)
-title(main ="Approximation errors of the \nlinear and greedy approximations as functions of J", cex.main=1)
-curve(compute_err_nl, 1,200, add = TRUE, col="red", lwd = 2)
-legend("top",inset=.02, legend=c("Linear", "Greedy"),
-       col=c("blue", "red"), lty = 1, lwd=2, cex= 0.8)
+par(mfrow=c(1,2))
 ```
+
+Starting the raining with the Gradient Descent
+
+```{r training}
+it = 1
+continue = T
+while (continue) {
+  
+  # updating the parameters 
+  beta = beta - alpha * gradient(n=nrow(X_tr), X_tr, X.y, X.t.beta)
+  X.t.beta = X_tr%*%beta
+  X.v.beta = X_val%*%beta
+  old.val.loss = val.loss
+  loss = 1/n * sum(log(1+exp(X.t.beta)) - y_tr*X.t.beta)
+  val.loss <- 1/n * sum(log(1+exp(X.v.beta)) - y_val*X.v.beta)
+  
+  # logging the metrics for plotting
+  loss.hist <- cbind(loss.hist, c(loss))
+  val.hist <- cbind(val.hist, c(val.loss))
+  train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+  val.acc = Accuracy(y_pred = X.v.beta>0, y_true = y_val)
+  train.accs <- cbind(train.accs, c(train.acc))
+  val.accs <- cbind(val.accs, c(val.acc))
+  
+  # conditions for stop iterating
+  if ((old.val.loss <= val.loss + tolerance) || (it>epochs)){continue = F}
+  it = it + 1
+}
+
+```
+
+Here the descending curves:
+
+```{r plot, echo=FALSE}
+plot(seq(length(loss.hist)), loss.hist, 
+     type = "l", ylim = c(0,2), lwd = 3, col="dark red", main = "Loss during Gradient Descent",
+     xlab = "epochs", ylab = "Cross-Entropy loss")
+lines(seq(length(loss.hist)), val.hist, type = "l", lwd = 3, col="dark blue")
+plot(seq(length(loss.hist)), train.accs, type = "l",
+     ylim = c(0,1), lwd = 3, col="dark red", main = "Accuracy during Gradient Descent",
+     xlab = "epochs", ylab = "Accuracy")
+lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
+```
+
+And here the final results on test and train:
+
+```{r results}
+# metrics on train and test
+train.loss = loss.hist[length(loss.hist)]
+test.loss = 1/n * sum(log(1+exp(X_te %*% beta)) - y_te*X_te %*% beta)
+train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+test.acc = Accuracy(y_pred = X_te %*% beta>0, y_true = y_te)
+
+print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss), 
+            paste("Train acc:", train.acc, "Test acc:", test.acc), sep = "\n"))
+```
+
