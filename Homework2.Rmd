@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(require("viridis", quietly = T))
+suppressMessages(require("MLmetrics", quietly = T))
 set.seed(2020)
 ```
 
@@ -18,11 +19,13 @@ set.seed(2020)
 ### 1. Bayes strategy
 
 ### 2. Bayes Classification Rule $h_{opt}(x)$
+
 The Bayes classification rule $h_{opt}(x)$ for a binary classification (s.t. $Y \in \mathcal{Y} = \{0,1\}$) is given by:
 
 $$
 h_{opt}(x) = \mathbb{I}\left[\mathbb{P}(Y = 1 ~ | ~\mathbf{X} = \mathbf{x}) > \frac{1}{2}\right]
 $$
+
 Where (simplifying the notation for the $\mathbf{X}$), we have the Regression Function:
 $$
 \mathbb{P}(Y = 1 ~ |~ \mathbf{X}) = (Bayes)= \frac{ \mathbb{P}(\mathbf{X} ~ | ~Y=1) \cdot \mathbb{P}(Y=1)}{\mathbb{P}(\mathbf X)} =   \frac{ \mathbb{P}(\mathbf{X} ~ | ~Y=1) \cdot \mathbb{P}(Y=1)}{\mathbb{P}(\mathbf X ~ | ~Y=1)\cdot\mathbb{P}(Y=1) + \mathbb{P}(\mathbf X ~ | ~Y=0)\cdot\mathbb{P}(Y=0)}
@@ -32,14 +35,17 @@ Since we assume $(X,Y)$ r.v. with $Y \in \{0,1\}$ and $X \in \mathbb{R}$, having
 $$
 (X ~|~Y = 1) \sim Unif(-1, 3) ~~~ and~~~ (X ~|~Y = 0) \sim Unif(-3, 1)
 $$
+
 and:
 $$
 \mathbb{P}(Y=1)=\mathbb{P}(Y=0)= \frac{1}{2}
 $$ 
+
 But, since the conditional distributions of $X$ are uniforms, we can rewrite the probabilities as:
 $$
 \mathbb{P}(X ~|~Y = 1) = \frac{1}{4} \mathbb{I}_{[-1,3]} (x) ~~ and ~~ \mathbb{P}(X ~|~Y = 0) = \frac{1}{4} \mathbb{I}_{[-3,1]} (x)  
 $$
+
 
 So, by substituting the values, the Regression Function $\mathbb{P}(Y=1|X)$ for this classification problem becomes:
 
@@ -62,4 +68,137 @@ And the classification rule $h_{opt}$ can be written as:
 $$
 h_{opt}(x) = \mathbb{I}_\left[\mathbb{P}(Y = 1 ~ | ~ X) > \frac{1}{2}\right] (x) = \mathbb{I}_\left[ \frac{1}{2} \mathbb{I}_{[-1,1)} + \mathbb{I}_{[1,3]} > \frac{1}{2}\right] (x) = \mathbb{I}_{[1, 3]} (x)
 $$
+
 Which means that the observations are classified as $y=1$ when the feature $X$ has values in $[1,3]$, and $y=0$ otherwise.
+
+
+
+=======
+
+## Exercise 2: Go Gradient, Go!
+
+Loading the dataset and encoding the responses right after: 
+
+```{r getting the data and encoding the responses}
+load("data/amazon_review_clean.RData")
+
+# changing labels of y vectors to book = TRUE, movie = FALSE
+y_tr = (y_tr == "book")
+y_te = (y_te == "book")
+
+```
+
+Creating the validation dataset from train:
+
+```{r val dataset}
+val.indices = sample(seq(1, length(y_tr)), 50000, replace = F)
+X_val = X_tr[val.indices, ]
+y_val = y_tr[val.indices]
+X_tr = X_tr[-val.indices, ]
+y_tr = y_tr[-val.indices]
+```
+
+#### Gradient
+Defining the gradient computation and computing the $X.y$ matrix in advance:
+
+```{r the gradient function}
+# differentiation variables:
+gradient = function(n, X, X.y, X.t.beta){
+    1/n * (t(X) %*% (1/(1+exp(-X.t.beta))) - X.y)
+}
+
+X.y = t(X_tr)%*%y_tr
+```
+
+#### Parameters
+Now is time to initialize the parameters and hyper parameters:
+
+```{r parameters}
+# regression parameters
+beta = rnorm(ncol(X_tr), sd=0.1)
+
+# hyper parameters:
+alpha = 0.4 # learning rate
+tolerance = 0.00001 # tolerance for the convergence condition
+epochs = 500 # early stop on iterations
+
+n = nrow(X_tr)
+```
+
+```{r first step, echo=FALSE, include=FALSE}
+X.t.beta = X_tr %*% beta
+X.v.beta = X_val %*% beta
+loss = 1/n * sum(log(1+exp(X.t.beta)) - y_tr*X.t.beta)
+val.loss <- 1/n * sum(log(1+exp(X.v.beta)) - y_val*X.v.beta)
+train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+val.acc = Accuracy(y_pred = X.v.beta>0, y_true = y_val)
+train.accs = c(train.acc)
+val.accs = c(val.acc)
+val.hist <- c(val.loss)
+loss.hist = c(loss)
+
+par(mfrow=c(1,2))
+```
+
+#### Starting the training with the Gradient Descent
+
+```{r training}
+it = 1
+continue = T
+while (continue) {
+  
+  # updating the parameters 
+  beta = beta - alpha * gradient(n=nrow(X_tr), X_tr, X.y, X.t.beta)
+  X.t.beta = X_tr%*%beta
+  X.v.beta = X_val%*%beta
+  old.val.loss = val.loss
+  loss = 1/n * sum(log(1+exp(X.t.beta)) - y_tr*X.t.beta)
+  val.loss <- 1/n * sum(log(1+exp(X.v.beta)) - y_val*X.v.beta)
+  
+  # logging the metrics for plotting
+  loss.hist <- cbind(loss.hist, c(loss))
+  val.hist <- cbind(val.hist, c(val.loss))
+  train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+  val.acc = Accuracy(y_pred = X.v.beta>0, y_true = y_val)
+  train.accs <- cbind(train.accs, c(train.acc))
+  val.accs <- cbind(val.accs, c(val.acc))
+  
+  # conditions for stop iterating
+  if (((it>50) && (old.val.loss <= val.loss + tolerance)) || (it>epochs)){continue = F}
+  it = it + 1
+}
+
+```
+
+### Plots
+Here the descending curves:
+
+```{r plot, echo=FALSE}
+plot(seq(length(loss.hist)), loss.hist, 
+     type = "l", ylim = c(0,2), lwd = 3, col="dark red", main = "Loss during Gradient Descent",
+     xlab = "epochs", ylab = "Cross-Entropy loss")
+lines(seq(length(loss.hist)), val.hist, type = "l", lwd = 3, col="dark blue")
+plot(seq(length(loss.hist)), train.accs, type = "l",
+     ylim = c(0,1), lwd = 3, col="dark red", main = "Accuracy during Gradient Descent",
+     xlab = "epochs", ylab = "Accuracy")
+lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
+```
+
+
+### Final results
+And here the final results on test and train:
+
+```{r results, include=FALSE}
+# metrics on train and test
+train.loss = loss.hist[length(loss.hist)]
+test.loss = 1/n * sum(log(1+exp(X_te %*% beta)) - y_te*X_te %*% beta)
+train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
+test.acc = Accuracy(y_pred = X_te %*% beta>0, y_true = y_te)
+
+print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss), 
+            paste("Train acc:", train.acc, "Test acc:", test.acc), sep = "\n"))
+```
+Train loss: `r train.loss` Test loss: `r test.loss` \
+Train accuracy: `r train.acc` Test accuracy: `r test.acc` \
+Number of iterations: `r it`
+>>>>>>> 022002fbee41a6861d003b19f161ab35fcd9d877
