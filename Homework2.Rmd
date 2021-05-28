@@ -201,4 +201,3 @@ print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss),
 Train loss: `r train.loss` Test loss: `r test.loss` \
 Train accuracy: `r train.acc` Test accuracy: `r test.acc` \
 Number of iterations: `r it`
->>>>>>> 022002fbee41a6861d003b19f161ab35fcd9d877
