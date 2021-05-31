@@ -193,12 +193,16 @@ plot(seq(length(loss.hist)), loss.hist,
      type = "l", ylim = c(0,2), lwd = 3, col="dark red", main = "Loss during Gradient Descent",
      xlab = "epochs", ylab = "Cross-Entropy loss")
 lines(seq(length(loss.hist)), val.hist, type = "l", lwd = 3, col="dark blue")
+legend("topright", inset=.02, legend=c("Train Loss", "Val Loss"), fill=c("dark red", "dark blue"))
 plot(seq(length(loss.hist)), train.accs, type = "l",
      ylim = c(0,1), lwd = 3, col="dark red", main = "Accuracy during Gradient Descent",
      xlab = "epochs", ylab = "Accuracy")
 lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
+legend("bottomright", inset=.02, legend=c("Train Acc", "Val ACC"), fill=c("dark red", "dark blue"))
 ```
 
+At the beginning the Loss is pretty unstable, but after 20 epochs it descents rapidly ad gets to a plateau slightly decreasing; <br>
+We can also observe that we reach convergence -with tolerance of `r tolerance`- before reaching the epoch early stop, set at `r epochs`.
 
 ### Final results
 And here the final results on test and train:
