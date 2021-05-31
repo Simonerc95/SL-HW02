@@ -16,7 +16,22 @@ set.seed(2020)
 
 ## Exercise 1: The Bayes Classifier
 
-### 1. Bayes strategy
+### 1. Bayes strategy/classifier
+
+Given the definition of the conditional (**pointwise**) risk $R(s~|~\textbf x)$ for a strategy $s(\textbf x)$, the **Bayes Strategy (predictor)** can be defined as the strategy $s_opt$ which minimizes the conditional risk, as follows:
+
+$$
+s_{\text{opt}}(\textbf x) = \underset{s \in \mathcal Y}{\text {argmin} } ~R(s~|~\mathbf x)
+$$
+Which yields the **Bayes Risk**:
+$$
+R_{opt} = R(s_{opt}) = \mathbb{E}_\mathbf{X} ~\underset{s\in \mathcal Y}{\text {inf}}~ R(s~|~\mathbf X)
+$$
+So, in the case of Regression ($Y ~\in ~ \mathcal Y ~ = \mathbb{R} $ and $\mathbf{X} = [X_1, ..., X_p]^\textsf{T}$), the Bayes strategy that minimizes the conditional risk can be shown to be the **Regression function**:
+$$
+f_{\text{opt}} (\mathbf X) = \underset{\text {all } f}{\text {argmin} } ~R[f(\mathbf X)] = \mathbb{E}(Y ~|~ \mathbf X)
+$$
+Ant the Bayes classifier (in the case of binary classification where $Y ~\in ~ \mathcal Y ~ = \{0,1\} $) can be obtained by plugging in the  the regression function (which in this case becomes $f_{\text{opt}} (\mathbf X) =  \mathbb{E}(Y ~|~ \mathbf X) = \mathbb{P}(Y=1 ~|~ \mathbf X) $)
 
 ### 2. Bayes Classification Rule $h_{opt}(x)$
 
@@ -118,9 +133,9 @@ Now is time to initialize the parameters and hyper parameters:
 beta = rnorm(ncol(X_tr), sd=0.1)
 
 # hyper parameters:
-alpha = 0.4 # learning rate
+alpha = 0.3 # learning rate
 tolerance = 0.00001 # tolerance for the convergence condition
-epochs = 500 # early stop on iterations
+epochs = 60 # early stop on iterations
 
 n = nrow(X_tr)
 ```
@@ -198,6 +213,6 @@ test.acc = Accuracy(y_pred = X_te %*% beta>0, y_true = y_te)
 print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss), 
             paste("Train acc:", train.acc, "Test acc:", test.acc), sep = "\n"))
 ```
-Train loss: `r train.loss` Test loss: `r test.loss` \
-Train accuracy: `r train.acc` Test accuracy: `r test.acc` \
+Train loss: `r train.loss`,  Test loss: `r test.loss` \
+Train accuracy: `r train.acc`,  Test accuracy: `r test.acc` \
 Number of iterations: `r it`

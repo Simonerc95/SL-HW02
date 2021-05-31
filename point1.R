@@ -8,7 +8,6 @@ n = 250
 p <- function(x, y){if(y==0){dunif(x, -3, 1) * 1/2}
     else if(y==1){dunif(x, -1, 3) * 1/2}
     else 0}
-curve(p(x,0) + p(x, 1), xlim = c(-5, 5),col = 'red')
 
 ys <- rbinom(n, 1, 0.5)
 ys_test <- rbinom(n, 1, 0.5)
