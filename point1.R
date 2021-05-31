@@ -72,4 +72,3 @@ avg_acc_Bayes = mean(total_acc_Bayes)
 avg_acc_Log = mean(total_acc_Log)
 sd_acc_Bayes = sd(total_acc_Bayes)
 sd_acc_Log = sd(total_acc_Log)
-

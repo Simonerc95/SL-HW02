@@ -2,16 +2,17 @@
 title: "Homework 2"
 author: "Ruggeri D., Ercolino S., Tazza G."
 date: "25/5/2021"
+geometry: "left=1.5cm,right=1.5cm,top=2cm,bottom=2cm"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(require("viridis", quietly = T))
 suppressMessages(require("MLmetrics", quietly = T))
-set.seed(2020)
+set.seed(2021)
 ```
 
 ## Exercise 1: The Bayes Classifier
@@ -29,17 +30,17 @@ $$
 R_{opt} = R(s_{opt}) = \mathbb{E}_\mathbf{X} ~\underset{s\in \mathcal Y}{\text {inf}}~ R(s~|~\mathbf X)
 $$
 
-So, in the case of Regression ($Y ~\in ~ \mathcal Y ~ = \mathbb{R} $ and $\mathbf{X} = [X_1, ..., X_p]^\textsf{T}$), the Bayes strategy that minimizes the conditional risk can be shown to be the **Regression function**:
+So, in the case of Regression ($Y ~ \in ~ \mathcal Y ~ = \mathbb{R}$ and $\mathbf{X} = [X_1, ..., X_p]^\textsf{T}$), the Bayes strategy that minimizes the conditional risk can be shown to be the **Regression function**:
 $$
 f_{\text{opt}} (\mathbf X) = \underset{\text {all } f}{\text {argmin} } ~R[f(\mathbf X)] = \mathbb{E}(Y ~|~ \mathbf X)
 $$
 
-And the Bayes classifier (in the case of binary classification where $Y ~\in ~ \mathcal Y ~ = \{0,1\} $) can be obtained by dicothomizing the regression function (which in this case becomes $f_{\text{opt}} (\mathbf X) =  \mathbb{E}(Y ~|~ \mathbf X) = \mathbb{P}(Y=1 ~|~ \mathbf X) $) to define the classification rule $h_{opt}$, which can be proven to be again the strategy (classifier) that minimizes the (classification) risk:
+And the Bayes classifier (in the case of binary classification where $Y ~\in ~ \mathcal Y ~ = \{0,1\}$) can be obtained by dicothomizing the regression function (which in this case becomes $f_{\text{opt}} (\mathbf X) =  \mathbb{E}(Y ~|~ \mathbf X) = \mathbb{P}(Y=1 ~|~ \mathbf X)$) to define the classification rule $h_{opt}$, which can be proven to be again the strategy (classifier) that minimizes the (classification) risk:
 
 $$
 h_{\text{opt}} (\mathbf x) = \underset{\text {all } h}{\text {argmin} } ~R~[h(\mathbf x)]  = \mathbb{I}\left(f_{\text{opt}}(\mathbf x) \geq \frac{1}{2}\right) 
 $$
-This means, in general, that any classifier $h$ can at best be expected to perform as well as the theoretical Bayes classifier, which could be build under the assumption of perfect information about the data generating process. So if a plug-in classifier was built $\hat h_n (\mathbf x) = \mathbb{I}(\hat f_n (\mathbf x) \geq 1/2)$, with $\hat f_n $ close to $f_{text{opt}}$, then the plug-in classification risk would be close to the Bayes risk, thus being close to minimizing the classification risk.
+This means, in general, that any classifier $h$ can at best be expected to perform as well as the theoretical Bayes classifier, which could be build under the assumption of perfect information about the data generating process. So if a plug-in classifier was built $\hat h_n (\mathbf x) = \mathbb{I}(\hat f_n (\mathbf x) \geq 1/2)$, with $\hat f_n$ close to $f_{\text{opt}}$, then the plug-in classification risk would be close to the Bayes risk, thus being close to minimizing the classification risk.
 
 ### 2. Bayes Classification Rule $h_{opt}(x)$
 
@@ -89,10 +90,10 @@ $$
 
 And the classification rule $h_{opt}$ can be written as:
 $$
-h_{opt}(x) = \mathbb{I}_\left[\mathbb{P}(Y = 1 ~ | ~ X) > \frac{1}{2}\right] (x) = \mathbb{I}_\left[ \frac{1}{2} \mathbb{I}_{[-1,1)} + \mathbb{I}_{[1,3]} > \frac{1}{2}\right] (x) = \mathbb{I}_{[1, 3]} (x)
+h_{opt}(x) = \mathbb{I}_{\left[\mathbb{P}(Y = 1 ~ | ~ X) > \frac{1}{2}\right]} (x) = \mathbb{I}_{\left[ \frac{1}{2} \mathbb{I}_{[-1,1)} + \mathbb{I}_{[1,3]} > \frac{1}{2}\right]} (x) = \mathbb{I}_{[1, 3]} (x)
 $$
 
-Which means that the observations are classified as $y=1$ when the feature $X$ has values in $[1,3]$, and $y=0$ otherwise.
+Which means that the observations are classified as $y=1$ when the feature $x$ has values in $[1,3]$, and $y=0$ otherwise.
 
 
 
@@ -125,14 +126,18 @@ legend(1.2, 0.3, legend = c('Simulated Histogram', 'Theoretical PDF'), col = c('
 ```
 
 
-#### Plot the data together with the regression function that defines $h_{opt}(x)$ and Evaluate the performance of the Bayes Classifiers on these simple
+#### *$\cdot$ Plot the data together with the regression function that defines $h_{opt}(x)$ and Evaluate the performance of the Bayes Classifiers on these simple*\
+
 
 ```{r}
 # Regression function
-plot(xs, ys, col='red', pch=19,  main = 'n = 250 Simulated Data & Regression Function')
+plot(xs, ys, col='red', pch=19,  
+     main = 'n = 250 Simulated Data & Regression Function', 
+     xlab = 'x', ylab = 'y')
 reg.fun <- function(x){ p(x, 1)/(p(x,  0) + p(x, 1))}
 curve(reg.fun, xlim = c(-5,5), lwd=2, col = 'green', add = T)
-legend(-3, 0.9, legend = c('Simulated Data', 'Regression Function'), col = c('red', 'green'), 
+legend(-3, 0.9, legend = c('Simulated Data', 'Regression Function'),
+       col = c('red', 'green'), 
        lty = 1, lwd = 4, cex=0.8)
 
 h.opt <- function(x) {if(reg.fun(x) > 0.5) {1}
@@ -142,7 +147,9 @@ accuracy.Bayes = sum(h.opt(xs_test) == ys_test)/length(ys_test)
 sprintf("Accuracy of the Bayes Classifier:  %s", accuracy.Bayes)
 ```
 
-#### Apply any other classifier of your choice to these data and comparatively comment its performance
+By looking at the marginal distribution of $X$, we know that $\sim50\%$ of the simulated data points lie in the central interval $(-1,1)$, where we know that the probability that observations in this interval belong to class $Y=1$ is exactly $\mathbb P (Y=1~|~X\in(-1,1) = 1/2$ (also the value of the regression function in this interval). This means that, in average, around half of the $\sim50\%$, so $\sim25\%$ of the simulated data points would be misclassified by the Bayes classifier. So the classification accuracy we expect to see is $\sim75\%$ (with fluctuation due to the estimation based on $n=250$ simulated data points), and this is confirmed by the accuracy obtained through simulation.
+
+#### *$\cdot$ Apply any other classifier of your choice to these data and comparatively comment its performance*
 
 As another classifier we chose logistic regression one:
 ```{r}
@@ -156,6 +163,8 @@ predicted.classes <- ifelse(probabilities > 0.5, 1, 0)
 accuracy.Log = sum(predicted.classes == test$y)/length(test$y)
 sprintf("Accuracy of the Log classifier:  %s", accuracy.Log)
 ```
+
+Although the Bayes classifier is the one that minimizes the risk, we can expect that another classifier may outperform it in a single test limited to $n=250$ observations, but this is not the case in this specific test. Nonetheless, since we can simulate exactly from the data generating process, the best idea is to perform a test through repeated sampling to confirm (if successful) that the Bayes classifier is indeed the "best", in the sense that it is the one that minimizes the misclassification error, and that another classifier $h$ (in our case a logistic regression), can at best match the average performance of the classifier $h_{\text{opt}}$.
 
 ### 4. Repeat the sampling M = 1000 times keeping n = 250 fixed
 
@@ -218,7 +227,7 @@ X_tr = X_tr[-val.indices, ]
 y_tr = y_tr[-val.indices]
 ```
 
-#### Gradient
+#### *$\cdot$ Gradient*
 Defining the gradient computation and computing the $X.y$ matrix in advance:
 
 ```{r the gradient function}
@@ -230,7 +239,8 @@ gradient = function(n, X, X.y, X.t.beta){
 X.y = t(X_tr)%*%y_tr
 ```
 
-#### Parameters
+#### *$\cdot$ Parameters*
+
 Now is time to initialize the parameters and hyper parameters:
 
 ```{r parameters}
@@ -238,9 +248,9 @@ Now is time to initialize the parameters and hyper parameters:
 beta = rnorm(ncol(X_tr), sd=0.1)
 
 # hyper parameters:
-alpha = 0.3 # learning rate
+alpha = 0.2 # learning rate
 tolerance = 0.00001 # tolerance for the convergence condition
-epochs = 60 # early stop on iterations
+epochs = 350 # early stop on iterations
 
 n = nrow(X_tr)
 ```
@@ -260,7 +270,9 @@ loss.hist = c(loss)
 par(mfrow=c(1,2))
 ```
 
-#### Starting the training with the Gradient Descent
+
+#### *$\cdot$ Starting the training with the Gradient Descent*
+The chunk of code below executes the training of the classifier by gradient descent.
 
 ```{r training}
 it = 1
@@ -284,21 +296,25 @@ while (continue) {
   val.accs <- cbind(val.accs, c(val.acc))
   
   # conditions for stop iterating
-  if (((it>50) && (old.val.loss <= val.loss + tolerance)) || (it>epochs)){continue = F}
+  if (((it>50) && (old.val.loss <= val.loss + tolerance)) || (it==epochs)){continue = F}
   it = it + 1
 }
 
 ```
 
-### Plots
+### *$\cdot$ Plots*
 Here the descending curves:
 
-```{r plot, echo=FALSE}
+```{r plot1, echo=FALSE}
 plot(seq(length(loss.hist)), loss.hist, 
      type = "l", ylim = c(0,2), lwd = 3, col="dark red", main = "Loss during Gradient Descent",
      xlab = "epochs", ylab = "Cross-Entropy loss")
 lines(seq(length(loss.hist)), val.hist, type = "l", lwd = 3, col="dark blue")
 legend("topright", inset=.02, legend=c("Train Loss", "Val Loss"), fill=c("dark red", "dark blue"))
+```
+
+
+```{r plot2, echo=FALSE}
 plot(seq(length(loss.hist)), train.accs, type = "l",
      ylim = c(0,1), lwd = 3, col="dark red", main = "Accuracy during Gradient Descent",
      xlab = "epochs", ylab = "Accuracy")
@@ -307,9 +323,9 @@ legend("bottomright", inset=.02, legend=c("Train Acc", "Val ACC"), fill=c("dark 
 ```
 
 At the beginning the Loss is pretty unstable, but after 20 epochs it descents rapidly ad gets to a plateau slightly decreasing; <br>
-We can also observe that we reach convergence -with tolerance of `r tolerance`- before reaching the epoch early stop, set at `r epochs`.
+We can also observe that we didn't reach convergence -with tolerance of `r tolerance`-, because the early stop, set at `r epochs` epochs, was reached.
 
-### Final results
+### *$\cdot$ Final results*
 And here the final results on test and train:
 
 ```{r results, include=FALSE}
@@ -318,10 +334,9 @@ train.loss = loss.hist[length(loss.hist)]
 test.loss = 1/n * sum(log(1+exp(X_te %*% beta)) - y_te*X_te %*% beta)
 train.acc = Accuracy(y_pred = X.t.beta>0, y_true = y_tr)
 test.acc = Accuracy(y_pred = X_te %*% beta>0, y_true = y_te)
-
 print(paste(paste("Train loss:", train.loss, "Test loss:", test.loss), 
             paste("Train acc:", train.acc, "Test acc:", test.acc), sep = "\n"))
 ```
 Train loss: `r train.loss`,  Test loss: `r test.loss` \
 Train accuracy: `r train.acc`,  Test accuracy: `r test.acc` \
-Number of iterations: `r it`
+Number of iterations: `r epochs`
