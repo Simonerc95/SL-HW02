@@ -120,7 +120,7 @@ beta = rnorm(ncol(X_tr), sd=0.1)
 # hyper parameters:
 alpha = 0.4 # learning rate
 tolerance = 0.00001 # tolerance for the convergence condition
-epochs = 2#500 # early stop on iterations
+epochs = 500 # early stop on iterations
 
 n = nrow(X_tr)
 ```
