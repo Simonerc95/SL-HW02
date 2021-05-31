@@ -23,15 +23,23 @@ Given the definition of the conditional (**pointwise**) risk $R(s~|~\textbf x)$ 
 $$
 s_{\text{opt}}(\textbf x) = \underset{s \in \mathcal Y}{\text {argmin} } ~R(s~|~\mathbf x)
 $$
+
 Which yields the **Bayes Risk**:
 $$
 R_{opt} = R(s_{opt}) = \mathbb{E}_\mathbf{X} ~\underset{s\in \mathcal Y}{\text {inf}}~ R(s~|~\mathbf X)
 $$
+
 So, in the case of Regression ($Y ~\in ~ \mathcal Y ~ = \mathbb{R} $ and $\mathbf{X} = [X_1, ..., X_p]^\textsf{T}$), the Bayes strategy that minimizes the conditional risk can be shown to be the **Regression function**:
 $$
 f_{\text{opt}} (\mathbf X) = \underset{\text {all } f}{\text {argmin} } ~R[f(\mathbf X)] = \mathbb{E}(Y ~|~ \mathbf X)
 $$
-Ant the Bayes classifier (in the case of binary classification where $Y ~\in ~ \mathcal Y ~ = \{0,1\} $) can be obtained by plugging in the  the regression function (which in this case becomes $f_{\text{opt}} (\mathbf X) =  \mathbb{E}(Y ~|~ \mathbf X) = \mathbb{P}(Y=1 ~|~ \mathbf X) $)
+
+And the Bayes classifier (in the case of binary classification where $Y ~\in ~ \mathcal Y ~ = \{0,1\} $) can be obtained by dicothomizing the regression function (which in this case becomes $f_{\text{opt}} (\mathbf X) =  \mathbb{E}(Y ~|~ \mathbf X) = \mathbb{P}(Y=1 ~|~ \mathbf X) $) to define the classification rule $h_{opt}$, which can be proven to be again the strategy (classifier) that minimizes the (classification) risk:
+
+$$
+h_{\text{opt}} (\mathbf x) = \underset{\text {all } h}{\text {argmin} } ~R~[h(\mathbf x)]  = \mathbb{I}\left(f_{\text{opt}}(\mathbf x) \geq \frac{1}{2}\right) 
+$$
+This means, in general, that any classifier $h$ can at best be expected to perform as well as the theoretical Bayes classifier, which could be build under the assumption of perfect information about the data generating process. So if a plug-in classifier was built $\hat h_n (\mathbf x) = \mathbb{I}(\hat f_n (\mathbf x) \geq 1/2)$, with $\hat f_n $ close to $f_{text{opt}}$, then the plug-in classification risk would be close to the Bayes risk, thus being close to minimizing the classification risk.
 
 ### 2. Bayes Classification Rule $h_{opt}(x)$
 
