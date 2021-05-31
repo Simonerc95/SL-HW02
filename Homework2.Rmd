@@ -185,7 +185,7 @@ lines(seq(length(loss.hist)), val.accs, type = "l", lwd = 3, col="dark blue")
 ```
 
 At the beginning the Loss is pretty unstable, but after 20 epochs it descents rapidly ad gets to a plateau slightly decreasing; <br>
-The 
+We can also observe that we reach convergence -with tolerance of `r tolerance`- before reaching the epoch early stop, set at `r epochs`.
 
 ### Final results
 And here the final results on test and train:
